@@ -1,25 +1,33 @@
 var express = require('express');
 var router = express.Router();
-const User = require('../model/usermodel');
 
 /* GET users listing. */
-router.get('/', async function(req, res, next) {
-  
-  let results;
+router.post('/', async function(req, res, next) {
+  console.log(req.body);
+  const {username, password} = req.body;
 
-  try{
-    results = await User.find({}, '_id username password');
-  }catch(ex){
-    next()
+  if(!username || !password){
+    next();
+  }else{
+    const user = new User({username, password});
+
+    const exists = await user.usernameExists(username);
+
+    if(exists){
+      res.json({
+        message: 'user exists'
+      });
+    }else{
+      await user.save();
+
+      console.log('User added');
+      res.json({
+        message: 'User added'
+      });
+    }
+    
   }
-
-  res.json(results);
 });
-
-router.get('/:id_user', function(req, res, next) {
-  res.json({
-    name: 'Marcos Rivas'
-  });
 });
 
 module.exports = router;
