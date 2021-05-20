@@ -4,7 +4,7 @@ const ProductSchema = require('./productmodel');
 
 
 const OrderSchema = new Mongoose.Schema({
-    id: {type: ObjectId, required: true},
+    id: {type: ObjectId},
     iduser: {type: String, required: true, unique: true},
     products: [{id: String, qty: Number}],
     total: {type: Number},
