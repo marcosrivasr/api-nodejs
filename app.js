@@ -6,6 +6,11 @@ var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var ordersRouter = require('./routes/orders');
+var productsRouter = require('./routes/products');
+const mongoose = require('mongoose');
+
+require('dotenv').config();
 
 var app = express();
 
@@ -19,10 +24,18 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+mongoose.connect(process.env.CONNECTION_STRING, {useNewUrlParser: true, useUnifiedTopology: true});
+const connection = mongoose.connection;
+connection.on('error', console.error.bind(console, 'connection error:'));
+connection.once('open', () =>{
+  console.log('Conectado a la BD');
+});
+
 app.use('/', indexRouter);
 app.use('/api/auth', usersRouter);
 app.use('/api/orders', usersRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/products', usersRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
