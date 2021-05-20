@@ -1,9 +1,9 @@
-const { Mongoose } = require("mongoose");
+const Mongoose = require("mongoose");
 const bcrypt = require('bcrypt');
 
 
 const UserSchema = new Mongoose.Schema({
-    id: {type: ObjectId, required: true},
+    id: {type: Object},
     username: {type: String, required: true, unique: true},
     password: {type: String, required: true},
     name: {type: String}
@@ -26,6 +26,11 @@ UserSchema.pre('save', function(next){
     }
 });
 
+UserSchema.methods.usernameExists = async function(username){
+    let result = await Mongoose.model('User').find({username: username});
+    return result.length > 0;
+}
+
 UserSchema.methods.isCorrectPassword = function(password, callback){
     bcrypt.compare(password, this.password, function(err, same){
         if(err){
@@ -36,4 +41,4 @@ UserSchema.methods.isCorrectPassword = function(password, callback){
     });
 }
 
-module.exports = mongoose.model('User', UserSchema);
+module.exports = Mongoose.model('User', UserSchema);
