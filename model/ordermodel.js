@@ -4,10 +4,9 @@ const ProductSchema = require('./productmodel');
 
 
 const OrderSchema = new Mongoose.Schema({
-    id: {type: ObjectId},
-    iduser: {type: String, required: true, unique: true},
-    products: [{id: String, qty: Number}],
-    total: {type: Number},
+    iduser: {type: String, required: true},
+    products: [{idproduct: String, title: String, price: Number, qty: Number}],
+    total: {type: Number, default: 0},
     date: {type: Date, default: Date.now }
 });
 
