@@ -33,13 +33,17 @@ connection.once('open', () =>{
 
 app.use('/', indexRouter);
 app.use('/api/auth', usersRouter);
-app.use('/api/orders', usersRouter);
+app.use('/api/orders', ordersRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/products', productsRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  next(createError(404, 'errorasdsad'));
+  //next(createError(404, 'errorasdsad'));
+  res.json({
+    errorcode: 404,
+    message: req.error
+  });
 });
 
 // error handler
