@@ -1,6 +1,6 @@
-const { Mongoose } = require("mongoose");
-const UserSchema = require('./usermodel');
-const ProductSchema = require('./productmodel');
+const Mongoose = require("mongoose");
+const User = require('./usermodel');
+const Product = require('./productmodel');
 
 
 const OrderSchema = new Mongoose.Schema({
@@ -10,30 +10,47 @@ const OrderSchema = new Mongoose.Schema({
     date: {type: Date, default: Date.now }
 });
 
-OrderSchema.pre('save', function(next){
-    if(this.isModified('password') || this.isNew){
+OrderSchema.pre('save', async function(next){
+    if(this.isModified('products') || this.isNew){
         const document = this;
-
         const idUser = document.iduser;
         const products = document.products;
 
-        User.findById(idUser, function (err, user) {
-            if (err){
-                throw new Error('Error al encontrar usuario');
-            }
-            console.log(user.name);
+        document.total = 0;
 
-            let promises = [];
-            for(item of products){
-                promises.push(ProductSchema.findById(item.id));
-            }
+        let user;
+        let promises = [];
 
-            Promise.all(promises).then(res => {
-                console.log(res);
-            }).catch( err => {
-                throw new Error(err);
-            })
-        });
+        try{
+            user = await User.findById(idUser);
+        }catch(ex){
+            next(new Error(`The user with ID '${idUser}' does not exist`));
+            //next(ex);
+        }
+
+        try{
+            if(products.length == 0){
+                //products list is empty
+                next(new Error('Order cannot be empty. Add some products to continue'));
+            }else{
+                for(item of products){
+                    promises.push(Product.findById(item.idproduct));
+                }
+    
+                const resultPromises = await Promise.all(promises);
+    
+                console.log('res promises',resultPromises);
+    
+                resultPromises.forEach( (product, index) => {
+                    document.total += product.price;
+                    document.products[index].title = product.title;
+                    document.products[index].price = product.price;
+                });
+            }
+            
+        }catch(ex){
+            next(new Error(`Information of one or more products is incorrect`));
+        }
 
 
     }else{
@@ -42,4 +59,5 @@ OrderSchema.pre('save', function(next){
 });
 
 
-module.exports = mongoose.model('Order', OrderSchema);
+
+module.exports = Mongoose.model('Order', OrderSchema);
