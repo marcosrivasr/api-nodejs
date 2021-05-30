@@ -17,7 +17,6 @@ router.get('/', async function(req, res, next) {
 });
 
 router.post('/', async function(req, res, next) {
-  console.log(req.body);
   const {username, password} = req.body;
 
   if(!username || !password){
