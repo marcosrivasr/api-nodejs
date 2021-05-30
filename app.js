@@ -8,6 +8,7 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var ordersRouter = require('./routes/orders');
 var productsRouter = require('./routes/products');
+var authRouter = require('./routes/auth');
 const mongoose = require('mongoose');
 
 require('dotenv').config();
@@ -32,7 +33,7 @@ connection.once('open', () =>{
 });
 
 app.use('/', indexRouter);
-app.use('/api/auth', usersRouter);
+app.use('/auth', authRouter);
 app.use('/api/orders', ordersRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/products', productsRouter);
@@ -54,7 +55,10 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  //res.render('error');
+  res.json({
+    message: res.locals.message
+  });
 });
 
 module.exports = app;
