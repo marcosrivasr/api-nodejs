@@ -22,8 +22,8 @@ router.post('/', async function(req, res, next) {
         message: 'Order added'
       });
     }catch(ex){
-      req.error = ex.message;
-      next();
+      //req.error = ex.message;
+      next(ex);
     }
 
     
