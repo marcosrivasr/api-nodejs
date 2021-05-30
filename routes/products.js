@@ -1,15 +1,15 @@
 var express = require('express');
 var router = express.Router();
 const Product = require('../model/productmodel');
+const authMiddleware = require('../auth/auth.middleware');
 
-router.get('/', async function(req, res, next) {
-  
+router.get('/', authMiddleware.checkAuth, async function(req, res, next) {
   let results;
 
   try{
     results = await Product.find({}, '_id title price');
   }catch(ex){
-    next()
+    next(ex)
   }
 
   res.json(results);
@@ -17,7 +17,7 @@ router.get('/', async function(req, res, next) {
 
 router.post('/', async function(req, res, next) {
   console.log(req.body);
-  const {iduser, price} = req.body;
+  const {title, price} = req.body;
 
   if(!title || !price){
     console.log('error');
