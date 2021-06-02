@@ -25,9 +25,11 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-mongoose.connect(process.env.CONNECTION_STRING, {useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect(process.env.CONNECTION_STRING, {useNewUrlParser: true, useUnifiedTopology: true,  useFindAndModify: false});
 const connection = mongoose.connection;
-connection.on('error', console.error.bind(console, 'connection error:'));
+connection.on('error', () => {
+  throw new Error('Error connecting to the service');
+});
 connection.once('open', () =>{
   console.log('Conectado a la BD');
 });
@@ -40,11 +42,7 @@ app.use('/api/products', productsRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  //next(createError(404, 'errorasdsad'));
-  res.json({
-    errorcode: 404,
-    message: req.error
-  });
+  next(createError(404, 'The endpoint you try to access does not exist'));
 });
 
 // error handler
@@ -57,6 +55,7 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   //res.render('error');
   res.json({
+    errorcode: err.status || 500,
     message: res.locals.message
   });
 });
