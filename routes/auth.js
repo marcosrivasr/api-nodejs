@@ -2,12 +2,13 @@ var express = require('express');
 const User = require('../model/usermodel');
 const Token = require('../model/tokenmodel');
 const jwt = require('jsonwebtoken');
+const {jsonResponse} = require('../lib/jsonresponse');
 const { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } = process.env;
 var router = express.Router();
 
 router.post('/signup', async function(req, res, next) {
   
-    const {username} = req.body.username;
+    const {username, password} = req.body;
 
     try{
 
@@ -17,31 +18,35 @@ router.post('/signup', async function(req, res, next) {
         if(userExists){
             return next(new Error('user already exists'));
         }else{
-            const user = new User(req.body).save();
+            const user = new User({username, password});
 
             let accessToken = await user.createAccessToken();
             let refreshToken = await user.createRefreshToken();
 
-            return res.json({
-                message: 'user created'
-            });
+            user.save();
+
+            res.json(jsonResponse(200, {
+                message: 'User created successfully',
+                accessToken,
+                refreshToken
+            }));
         }
 
     }catch(err){
-
+        console.log(err);
     }
 });
 
 router.post('/login', async function(req, res, next) {
-    console.log('Login');
     const {username, password} = req.body;
 
     try{
         let user = new User();
         const userExists = await user.usernameExists(username);
-
+        console.log({userExists});
         if(userExists){
-           user = await User.findOne({username: username}); 
+            user = await User.findOne({username: username}); 
+            console.log(user);
             const passwordCorrect = await user.isCorrectPassword(password, user.password);
 
             if(passwordCorrect){
@@ -90,7 +95,7 @@ router.post('/refresh-token', async (req, res) => {
     }
 });
 
-router.get('/logout', async (req, res) => {
+router.delete('/logout', async (req, res) => {
     const {refreshToken} = req.body;
 
     try{
