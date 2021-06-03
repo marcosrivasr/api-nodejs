@@ -5,12 +5,10 @@ const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET
 
 exports.checkAuth = (req, res, next) => {
     console.log('check auth middleware');
-    //const token = req.get('x-auth-token');
     const header = req.header('Authorization');
     console.log(header);
 
     if(!header){
-        //next(new Error('Access Denied'));
         throw new Error('Access Denied. No authorization header provided');
     }else{
         const [bearer, token] = header.split(' ');
