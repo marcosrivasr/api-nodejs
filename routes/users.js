@@ -1,22 +1,25 @@
 var express = require('express');
 var router = express.Router();
 const User = require('../model/usermodel');
+const createError = require('http-errors');
+const {jsonResponse} = require('../lib/jsonresponse');
+const authMiddleware = require('../auth/auth.middleware'); 
 
 /* GET users listing. */
-router.get('/', async function(req, res, next) {
+router.get('/',authMiddleware.checkAuth, async function(req, res, next) {
   
   let results;
 
   try{
-    results = await User.find({}, '_id username password');
+    results = await User.find({}, '_id username name');
   }catch(ex){
-    next()
+    next(createError(400, 'There was a problem with the request'))
   }
 
-  res.json(results);
+  res.json(jsonResponse(200, results));
 });
 
-router.post('/', async function(req, res, next) {
+router.post('/', authMiddleware.checkAuth, async function(req, res, next) {
   const {username, password} = req.body;
 
   if(!username || !password){
@@ -34,28 +37,53 @@ router.post('/', async function(req, res, next) {
       await user.save();
 
       console.log('User added');
-      res.json({
-        message: 'User added'
-      });
+      res.json(jsonResponse(200, {message: 'User added correctly'}));
     }
     
   }
 });
 
-router.get('/:iduser', async function(req, res, next) {
+router.get('/:iduser', authMiddleware.checkAuth, async function(req, res, next) {
   let results;
 
   try{
-    results = await User.findById(req.params.iduser, '_id username');
+    results = await User.findById(req.params.iduser, '_id username name');
+    
+    if(!results) return next(new createError(400, `No user found`));
   }catch(ex){
-    next()
+    //next(new Error(`No user found with id ${req.params.iduser}`));
+    next(createError(400, `No user found with id ${req.params.iduser}`))
   }
 
-  res.json(results);
+  res.json(jsonResponse(200, results));
 });
 
-router.patch('/:iduser', function(req, res, next) {
-  res.send('respond with a resource');
+router.patch('/:iduser', authMiddleware.checkAuth, async function(req, res, next) {
+  const {name, password} = req.body;
+  let query = {};
+
+  if(!name && !password) return next(createError(400, 'No parameters provided'));
+
+  try{
+    if(name){
+      query['name'] = name;
+    }
+    if(password){
+      query['password'] = password;
+    }
+    const results = await User.findOneAndUpdate({_id: req.params.iduser}, query);
+    
+    if(!results) return next(new createError(400, `No user found`));
+
+  }catch(ex){
+    console.log(ex);
+    next(createError(400, `Some of the fields couldn't be updated`))
+  }
+
+  res.json(jsonResponse(200, {
+    message: `User ${req.params.iduser} updated successfully`
+  }));
+  
 });
 
 
