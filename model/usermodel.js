@@ -47,7 +47,7 @@ UserSchema.methods.createAccessToken = function(){
     const accessToken = jwt.sign(
         { user: {id, username}}, 
         ACCESS_TOKEN_SECRET, 
-        {expiresIn: '10m'}
+        {expiresIn: '1d'}
     );
 
     return accessToken;
