@@ -1,32 +1,45 @@
 var express = require('express');
 var router = express.Router();
 const Order = require('../model/ordermodel');
+const createError = require('http-errors');
+const {jsonResponse} = require('../lib/jsonresponse');
+const authMiddleware = require('../auth/auth.middleware'); 
 
-/* GET users listing. */
-router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+
+router.get('/', authMiddleware.checkAuth, async function(req, res, next) {
+  
+  try{
+    const results = await Order.find({},'id, iduser total date products ');
+
+    res.json(jsonResponse(200, results))
+
+  }catch(ex){
+    console.log(ex);
+    next(createError(500, `Error trying to fetch the orders`))
+  }
 });
 
-router.post('/', async function(req, res, next) {
+router.post('/', authMiddleware.checkAuth, async function(req, res, next) {
   const {iduser, products} = req.body;
 
   if(!iduser || !products){
-    console.log('error');
-    next();
-  }else{
+    return next(createError(400, `No information provided to create order`));
+  }else if(iduser && products && products.length > 0){
+
     const order = new Order({iduser, products});
     try{
-      await order.save();
+      const result = await order.save();
 
-      res.json({
-        message: 'Order added'
-      });
+      res.json(jsonResponse(200,
+        {message: `Order ${result._id} added successfully`}));
     }catch(ex){
       //req.error = ex.message;
       next(ex);
     }
 
     
+  }else{
+    return next(createError(400, `Information incomplete. Provide all the information to create the order`));
   }
 });
 
